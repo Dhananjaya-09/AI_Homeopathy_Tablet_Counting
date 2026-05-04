@@ -15,6 +15,11 @@ INPUT_SIZE  = 640
 CONF_THRESH = 0.35
 IOU_THRESH  = 0.45
 CLASS_NAMES = ["pill"]
+TARGET_FPS = 30
+INFER_EVERY_N_FRAMES = 5
+STREAM_JPEG_QUALITY = 55
+CAM_WIDTH = 480
+CAM_HEIGHT = 360
 
 # ─── Load ONNX Model ───────────────────────────────────────────────────────────
 session = None
@@ -119,28 +124,33 @@ camera_lock   = threading.Lock()
 active_cam    = None
 cam_index     = 0
 stream_active = False
+stats_lock = threading.Lock()
+last_detections = []
 
 def open_camera(index=0):
-    global active_cam, cam_index
+    global active_cam, cam_index, last_detections
     with camera_lock:
         if active_cam is not None:
             active_cam.release()
         cap = cv2.VideoCapture(index, cv2.CAP_DSHOW if os.name == "nt" else cv2.CAP_ANY)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH,  640)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        cap.set(cv2.CAP_PROP_FPS, 20)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAM_WIDTH)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAM_HEIGHT)
+        cap.set(cv2.CAP_PROP_FPS, 30)
         cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         if not cap.isOpened():
             return False
         active_cam = cap
         cam_index  = index
+    with stats_lock:
+        last_detections = []
         return True
 
 def generate_frames():
-    global stream_active
+    global stream_active, last_detections
     stream_active = True
-    frame_interval = 1 / 15
+    frame_interval = 1 / TARGET_FPS
     last_time = 0
+    frame_count = 0
 
     try:
         while stream_active:
@@ -159,9 +169,16 @@ def generate_frames():
                 time.sleep(0.05)
                 continue
 
-            detections = run_inference(frame)
+            frame_count += 1
+            if frame_count % INFER_EVERY_N_FRAMES == 0:
+                detections = run_inference(frame)
+                with stats_lock:
+                    last_detections = detections
+            else:
+                with stats_lock:
+                    detections = list(last_detections)
             frame      = draw_detections(frame, detections)
-            _, buffer  = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            _, buffer  = cv2.imencode(".jpg", frame, [cv2.IMWRITE_JPEG_QUALITY, STREAM_JPEG_QUALITY])
             yield (b"--frame\r\nContent-Type: image/jpeg\r\n\r\n"
                    + buffer.tobytes() + b"\r\n")
     finally:
@@ -187,14 +204,12 @@ def video_feed():
 
 @app.route("/video_feed_snap")
 def video_feed_snap():
-    """Single frame JSON — returns pill count + avg confidence for sidebar polling."""
+    """Returns latest detections from stream loop (avoids extra camera/model load)."""
     with camera_lock:
         if active_cam is None or not active_cam.isOpened():
             return jsonify({"count": 0, "avg_conf": None})
-        ret, frame = active_cam.read()
-    if not ret:
-        return jsonify({"count": 0, "avg_conf": None})
-    detections = run_inference(frame)
+    with stats_lock:
+        detections = list(last_detections)
     return jsonify({
         "count":    len(detections),
         "avg_conf": avg_confidence(detections)
@@ -208,13 +223,15 @@ def start_camera():
 
 @app.route("/stop_camera", methods=["POST"])
 def stop_camera():
-    global stream_active, active_cam
+    global stream_active, active_cam, last_detections
     stream_active = False
     time.sleep(0.2)
     with camera_lock:
         if active_cam:
             active_cam.release()
             active_cam = None
+    with stats_lock:
+        last_detections = []
     return jsonify({"success": True})
 
 @app.route("/detect", methods=["POST"])

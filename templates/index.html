@@ -122,10 +122,11 @@
   .subtitle2 { font-size:.85rem; color:var(--muted); max-width:560px; line-height:1.7; margin-bottom:3rem; font-family:'DM Mono',monospace; }
 
   /* ═══════════════ CARDS ═══════════════ */
-  .cards { display:flex; gap:1.5rem; flex-wrap:wrap; justify-content:center; }
+  .cards { display:flex; gap:1.5rem; flex-wrap:wrap; justify-content:center; align-items:stretch; }
   .card {
     background:var(--surface); border:1px solid var(--border); border-radius:20px;
     padding:2.2rem 1.8rem; width:280px; text-decoration:none; color:inherit;
+    min-height:360px;
     display:flex; flex-direction:column; align-items:center; gap:1rem;
     position:relative; overflow:hidden;
     transition:border-color .25s,transform .25s,box-shadow .25s;
@@ -135,8 +136,8 @@
   .card:hover::before { opacity:1; }
   .card-icon { width:64px; height:64px; border-radius:16px; background:rgba(0,220,130,.1); border:1px solid rgba(0,220,130,.2); display:flex; align-items:center; justify-content:center; font-size:1.8rem; }
   .card h2 { font-size:1.15rem; font-weight:700; }
-  .card p { font-size:.85rem; color:var(--muted); text-align:center; line-height:1.65; }
-  .card-btn { margin-top:.5rem; font-family:'DM Mono',monospace; font-size:.76rem; padding:.5rem 1.4rem; border-radius:8px; background:rgba(0,220,130,.12); border:1px solid rgba(0,220,130,.3); color:var(--green); }
+  .card p { font-size:.85rem; color:var(--muted); text-align:center; line-height:1.65; flex:1; }
+  .card-btn { margin-top:auto; font-family:'DM Mono',monospace; font-size:.76rem; padding:.5rem 1.4rem; border-radius:8px; background:rgba(0,220,130,.12); border:1px solid rgba(0,220,130,.3); color:var(--green); }
 
   /* ═══════════════ STATS ═══════════════ */
   .stats { display:flex; gap:2rem; flex-wrap:wrap; justify-content:center; margin-top:3.5rem; font-family:'DM Mono',monospace; }
@@ -230,7 +231,7 @@
     <div class="stat"><div class="stat-val">ONNX</div><div class="stat-lbl">Runtime</div></div>
     <div class="stat"><div class="stat-val">90–95%</div><div class="stat-lbl">Expected Accuracy</div></div>
     <div class="stat"><div class="stat-val">CPU</div><div class="stat-lbl">Optimized</div></div>
-    <div class="stat"><div class="stat-val">15 FPS</div><div class="stat-lbl">Live Stream</div></div>
+    <div class="stat"><div class="stat-val">30 FPS</div><div class="stat-lbl">Live Stream</div></div>
   </div>
 </main>
 
@@ -271,7 +272,7 @@
 </footer>
 
 <script>
-  setTimeout(() => document.getElementById('splash').classList.add('hide'), 2600);
+  setTimeout(() => document.getElementById('splash').classList.add('hide'), 900);
 </script>
 </body>
 </html>

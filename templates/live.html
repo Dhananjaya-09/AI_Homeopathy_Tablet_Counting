@@ -180,7 +180,7 @@
       </div>
       <div class="info-row"><span class="lbl">Camera Index</span><span class="val" id="camIdx">—</span></div>
       <div class="info-row"><span class="lbl">Resolution</span><span class="val">640×480</span></div>
-      <div class="info-row"><span class="lbl">Target FPS</span><span class="val">15</span></div>
+      <div class="info-row"><span class="lbl">Target FPS</span><span class="val">30</span></div>
     </div>
 
     <div class="info-card">
@@ -282,7 +282,7 @@
     setTimeout(pollStats, 800);
   }
 
-  setTimeout(() => document.getElementById('splash').classList.add('hide'), 2200);
+  setTimeout(() => document.getElementById('splash').classList.add('hide'), 900);
   window.addEventListener('beforeunload', () => {
     if (streaming) fetch('/stop_camera', {method:'POST', keepalive:true});
   });

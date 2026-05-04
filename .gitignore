@@ -2,6 +2,7 @@ __pycache__/
 *.pyc
 *.pyo
 venv/
+.venv/
 env/
 .env
 model/*.onnx
@@ -9,5 +10,6 @@ model/*.pt
 dataset/
 .vscode/
 Thumbs.db
+.DS_Store
 desktop.ini
 PillDetection/
